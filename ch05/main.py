@@ -13,6 +13,8 @@ load_dotenv(find_dotenv())
 model_name = os.getenv("LLM_MODEL") or "gpt-4o-mini"
 model_provider = os.getenv("LLM_MODEL_PROVIDER") or "openai"
 
+# print(model_name, model_provider)
+
 llm = init_chat_model(model_name, model_provider=model_provider)
 
 prompt = ChatPromptTemplate.from_messages([
