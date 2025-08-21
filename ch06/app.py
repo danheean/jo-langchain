@@ -2,6 +2,18 @@ import streamlit as st
 from langchain.prompts import PromptTemplate
 from langchain_ollama.llms import OllamaLLM
 from langchain_community.llms.ctransformers import CTransformers
+import langchain
+from langchain.globals import set_debug, set_verbose
+import logging
+import time
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# LangChain 전역 설정
+set_debug(True)    # 디버그 모드
+set_verbose(True)  # 상세 로그
 
 def getLLMResponse(form_input, email_sender, email_recipient, language):
     """
@@ -18,12 +30,14 @@ def getLLMResponse(form_input, email_sender, email_recipient, language):
     """
 
     llm = CTransformers(
-        model="./llms/llama-2-7b-chat.ggmlv3.q5_K_S.bin",
+        # model="./llms/llama-2-7b-chat.ggmlv3.q5_K_S.bin",
+        model="./llms/llama-2-7b-chat.ggmlv3.q8_0.bin",
         model_type="llama",
         config={
             "max_new_tokens": 512,
             "temperature": 0.01
-        }
+        },
+        verbose=True  # 진행사항 출력
     )
     # llm = OllamaLLM(model="gpt-oss:20b", temperature=0.7)
 
@@ -53,8 +67,24 @@ def getLLMResponse(form_input, email_sender, email_recipient, language):
         template=template
     )
 
+    # 체인 구성 (verbose 활성화)
     chain = prompt | llm
+    
+    # 프롬프트 미리보기
+    formatted_prompt = prompt.format(
+        email_topic=form_input,
+        sender=email_sender,
+        recipient=email_recipient,
+        language=language
+    )
+    print("=== 생성된 프롬프트 ===")
+    print(formatted_prompt)
+    print("=" * 50)
 
+    # 실행 시간 측정 시작
+    start_time = time.time()
+    print(f"⏰ LLM 실행 시작: {time.strftime('%H:%M:%S')}")
+    
     response = chain.invoke({
         "email_topic": form_input,
         "sender": email_sender,
@@ -62,7 +92,13 @@ def getLLMResponse(form_input, email_sender, email_recipient, language):
         "language": language
     })
 
+    # 실행 시간 계산
+    execution_time = time.time() - start_time
+    print(f"⏰ LLM 실행 완료: {time.strftime('%H:%M:%S')} (소요시간: {execution_time:.2f}초)")
+    
+    print("=== LLM 응답 ===")
     print(response)
+    print("=" * 50)
     return response
 
 st.set_page_config(
