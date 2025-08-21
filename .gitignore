@@ -12,3 +12,4 @@ wheels/
 .env
 llms/
 data/
+index/
